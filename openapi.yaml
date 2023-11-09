@@ -1,0 +1,37 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: Demo API
+    version: 0.0.1
+paths:
+    /demo/{name}:
+        get:
+            tags:
+                - Demo
+            operationId: Demo_CreateDemo
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.demo.v1.CreateDemoReply'
+components:
+    schemas:
+        api.demo.v1.CreateDemoReply:
+            type: object
+            properties:
+                name:
+                    type: string
+                msg:
+                    type: string
+tags:
+    - name: Demo
