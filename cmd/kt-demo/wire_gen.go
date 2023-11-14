@@ -30,10 +30,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	}
 	demoRepo := data.NewDemoRepo(logger, dataData)
 	demoBase := biz.NewDemoBase(demoRepo, logger)
-	demoService := service.NewDemoService(demoBase)
+	demoService := service.NewDemoService(demoBase, logger)
 	grpcServer := server.NewGRPCServer(confServer, demoService, logger)
 	httpServer := server.NewHTTPServer(confServer, demoService, logger)
-	app := newApp(logger, grpcServer, httpServer)
+	registrar := data.NewReg()
+	app := newApp(logger, grpcServer, httpServer, registrar)
 	return app, func() {
 		cleanup()
 	}, nil

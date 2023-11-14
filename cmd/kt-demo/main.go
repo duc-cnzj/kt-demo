@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"fmt"
 	"github.com/go-kratos/kratos/v2"
-	"github.com/hashicorp/consul/api"
+	"github.com/go-kratos/kratos/v2/registry"
 	"os"
+	"time"
 
 	"github.com/duc-cnzj/kt-demo/internal/conf"
 	"github.com/go-kratos/kratos/v2/config"
@@ -34,21 +35,14 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
-	// new consul client
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		panic(err)
-	}
-	// new reg with consul client
-	reg := consul.New(client)
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Registrar) *kratos.App {
 	return kratos.New(
-		kratos.ID(id+":demo"),
+		kratos.ID(fmt.Sprintf("%d", time.Now().Unix())),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
-		kratos.Registrar(reg),
+		//kratos.Registrar(r),
 		kratos.Server(
 			gs,
 			hs,

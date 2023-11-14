@@ -24,6 +24,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.demo.v1.CreateDemoReply'
+    /demos:
+        get:
+            tags:
+                - Demo
+            operationId: Demo_ListDemo
+            parameters:
+                - name: data
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.demo.v1.ListDemoReply'
 components:
     schemas:
         api.demo.v1.CreateDemoReply:
@@ -32,6 +49,11 @@ components:
                 name:
                     type: string
                 msg:
+                    type: string
+        api.demo.v1.ListDemoReply:
+            type: object
+            properties:
+                data:
                     type: string
 tags:
     - name: Demo

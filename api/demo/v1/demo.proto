@@ -18,7 +18,11 @@ service Demo {
 	rpc UpdateDemo (UpdateDemoRequest) returns (UpdateDemoReply);
 	rpc DeleteDemo (DeleteDemoRequest) returns (DeleteDemoReply);
 	rpc GetDemo (GetDemoRequest) returns (GetDemoReply);
-	rpc ListDemo (ListDemoRequest) returns (ListDemoReply);
+	rpc ListDemo (ListDemoRequest) returns (stream ListDemoReply) {
+		option (google.api.http) = {
+			get: "/demos"
+		};
+	}
 }
 
 message CreateDemoRequest {
@@ -39,10 +43,15 @@ message DeleteDemoReply {}
 message GetDemoRequest {}
 message GetDemoReply {}
 
-message ListDemoRequest {}
-message ListDemoReply {}
+message ListDemoRequest {
+	string data = 1;
+}
+message ListDemoReply {
+	string data = 1;
+}
 
 enum ErrorReason {
 	DEMO_UNSPECIFIED = 0 [(errors.code) = 500];;
 	DEMO_NOT_FOUND = 1 [(errors.code) = 404];;
+	DEMO_NOT_ALLOWED = 2 [(errors.code) = 403];;
 }

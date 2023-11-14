@@ -28,6 +28,7 @@ func NewDemoBase(repo DemoRepo, logger log.Logger) *DemoBase {
 
 func (b *DemoBase) Get(input *Input) (*Resp, error) {
 	if input.Name == "abc" {
+		b.log.Info("DemoBase Get called")
 		return nil, v1.ErrorDemoNotFound("err %s", "abc")
 	}
 	return b.repo.Get(input)

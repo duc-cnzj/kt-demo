@@ -34,3 +34,15 @@ func IsDemoNotFound(err error) bool {
 func ErrorDemoNotFound(format string, args ...interface{}) *errors.Error {
 	return errors.New(404, ErrorReason_DEMO_NOT_FOUND.String(), fmt.Sprintf(format, args...))
 }
+
+func IsDemoNotAllowed(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_DEMO_NOT_ALLOWED.String() && e.Code == 403
+}
+
+func ErrorDemoNotAllowed(format string, args ...interface{}) *errors.Error {
+	return errors.New(403, ErrorReason_DEMO_NOT_ALLOWED.String(), fmt.Sprintf(format, args...))
+}

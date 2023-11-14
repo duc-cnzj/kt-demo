@@ -34,7 +34,7 @@ type DemoClient interface {
 	UpdateDemo(ctx context.Context, in *UpdateDemoRequest, opts ...grpc.CallOption) (*UpdateDemoReply, error)
 	DeleteDemo(ctx context.Context, in *DeleteDemoRequest, opts ...grpc.CallOption) (*DeleteDemoReply, error)
 	GetDemo(ctx context.Context, in *GetDemoRequest, opts ...grpc.CallOption) (*GetDemoReply, error)
-	ListDemo(ctx context.Context, in *ListDemoRequest, opts ...grpc.CallOption) (*ListDemoReply, error)
+	ListDemo(ctx context.Context, in *ListDemoRequest, opts ...grpc.CallOption) (Demo_ListDemoClient, error)
 }
 
 type demoClient struct {
@@ -81,13 +81,36 @@ func (c *demoClient) GetDemo(ctx context.Context, in *GetDemoRequest, opts ...gr
 	return out, nil
 }
 
-func (c *demoClient) ListDemo(ctx context.Context, in *ListDemoRequest, opts ...grpc.CallOption) (*ListDemoReply, error) {
-	out := new(ListDemoReply)
-	err := c.cc.Invoke(ctx, Demo_ListDemo_FullMethodName, in, out, opts...)
+func (c *demoClient) ListDemo(ctx context.Context, in *ListDemoRequest, opts ...grpc.CallOption) (Demo_ListDemoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Demo_ServiceDesc.Streams[0], Demo_ListDemo_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &demoListDemoClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Demo_ListDemoClient interface {
+	Recv() (*ListDemoReply, error)
+	grpc.ClientStream
+}
+
+type demoListDemoClient struct {
+	grpc.ClientStream
+}
+
+func (x *demoListDemoClient) Recv() (*ListDemoReply, error) {
+	m := new(ListDemoReply)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // DemoServer is the server API for Demo service.
@@ -98,7 +121,7 @@ type DemoServer interface {
 	UpdateDemo(context.Context, *UpdateDemoRequest) (*UpdateDemoReply, error)
 	DeleteDemo(context.Context, *DeleteDemoRequest) (*DeleteDemoReply, error)
 	GetDemo(context.Context, *GetDemoRequest) (*GetDemoReply, error)
-	ListDemo(context.Context, *ListDemoRequest) (*ListDemoReply, error)
+	ListDemo(*ListDemoRequest, Demo_ListDemoServer) error
 	mustEmbedUnimplementedDemoServer()
 }
 
@@ -118,8 +141,8 @@ func (UnimplementedDemoServer) DeleteDemo(context.Context, *DeleteDemoRequest) (
 func (UnimplementedDemoServer) GetDemo(context.Context, *GetDemoRequest) (*GetDemoReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDemo not implemented")
 }
-func (UnimplementedDemoServer) ListDemo(context.Context, *ListDemoRequest) (*ListDemoReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListDemo not implemented")
+func (UnimplementedDemoServer) ListDemo(*ListDemoRequest, Demo_ListDemoServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListDemo not implemented")
 }
 func (UnimplementedDemoServer) mustEmbedUnimplementedDemoServer() {}
 
@@ -206,22 +229,25 @@ func _Demo_GetDemo_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Demo_ListDemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListDemoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Demo_ListDemo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListDemoRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(DemoServer).ListDemo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Demo_ListDemo_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServer).ListDemo(ctx, req.(*ListDemoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(DemoServer).ListDemo(m, &demoListDemoServer{stream})
+}
+
+type Demo_ListDemoServer interface {
+	Send(*ListDemoReply) error
+	grpc.ServerStream
+}
+
+type demoListDemoServer struct {
+	grpc.ServerStream
+}
+
+func (x *demoListDemoServer) Send(m *ListDemoReply) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // Demo_ServiceDesc is the grpc.ServiceDesc for Demo service.
@@ -247,11 +273,13 @@ var Demo_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetDemo",
 			Handler:    _Demo_GetDemo_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "ListDemo",
-			Handler:    _Demo_ListDemo_Handler,
+			StreamName:    "ListDemo",
+			Handler:       _Demo_ListDemo_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "demo/v1/demo.proto",
 }
